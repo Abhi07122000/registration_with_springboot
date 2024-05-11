@@ -1,5 +1,7 @@
 package com.example.CashrichLogin.api.v1.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.CashrichLogin.api.v1.controller.request.LoginDto;
 import com.example.CashrichLogin.api.v1.controller.request.SignupDto;
 import com.example.CashrichLogin.api.v1.controller.request.UpdationDto;
-import com.example.CashrichLogin.domain.User;
+import com.example.CashrichLogin.api.v1.controller.response.ResponseEnvelope;
 import com.example.CashrichLogin.service.UsersServiceImpl;
 
 import jakarta.validation.Valid;
@@ -25,13 +27,15 @@ public class UserController {
 	private UsersServiceImpl userServiceImpl;
 
 	@PostMapping("/signup")
-	public ResponseEntity<?> signUp(@RequestBody @Valid SignupDto signupDto) {
-		User user = userServiceImpl.signUp(signupDto);
-	    if (user != null) {
-	        return ResponseEntity.ok("User signed up successfully");
-	    } else {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to sign up user");
-	    }
+	public ResponseEntity<?> signUp(@RequestBody SignupDto signupDto) {
+		Map<String, Object> violations = userServiceImpl.performValidation(signupDto);
+		if (violations.isEmpty()) {
+			ResponseEnvelope response = userServiceImpl.signUp(signupDto);
+			return ResponseEntity.ok(response);
+		} else {
+			return ResponseEntity.ok(new ResponseEnvelope(HttpStatus.BAD_REQUEST.value(),
+					HttpStatus.BAD_REQUEST.getReasonPhrase(), violations));
+		}
 	}
 
 	@PostMapping("/login")
