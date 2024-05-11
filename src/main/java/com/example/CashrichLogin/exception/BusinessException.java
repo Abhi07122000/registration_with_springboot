@@ -2,8 +2,7 @@ package com.example.CashrichLogin.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class BusinessException  extends RuntimeException {
-
+public class BusinessException extends RuntimeException {
 
 	private static final long serialVersionUID = 7053912676684757403L;
 	Integer code = HttpStatus.INTERNAL_SERVER_ERROR.value();
@@ -28,4 +27,3 @@ public class BusinessException  extends RuntimeException {
 		this.code = code;
 	}
 }
-

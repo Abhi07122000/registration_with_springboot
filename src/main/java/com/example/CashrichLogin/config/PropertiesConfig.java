@@ -8,8 +8,7 @@ import lombok.Data;
 @Data
 @Configuration
 public class PropertiesConfig {
-	
-	
+
 	@Value("${userCryptoUrl}")
 	private String userCryptoUrl;
 

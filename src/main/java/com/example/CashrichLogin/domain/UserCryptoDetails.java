@@ -2,8 +2,6 @@ package com.example.CashrichLogin.domain;
 
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,7 +26,13 @@ public class UserCryptoDetails {
 
     private Long userId;
     
-    private String cryptoDetails;
+    private String name;
     
+    private String symbol;
+
+    private String numMarketPairs;
+
+    private String maxSupply;
+
     private LocalDateTime createdDate=LocalDateTime.now();	
 }

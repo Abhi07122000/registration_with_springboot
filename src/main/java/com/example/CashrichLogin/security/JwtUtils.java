@@ -24,12 +24,6 @@ public class JwtUtils {
 	@Value("${jwt.expiration}")
 	private Long expiration;
 
-//	public String generateToken(Authentication authentication) {
-//		Date now = new Date();
-//		Date expiryDate = new Date(now.getTime() + expiration);
-//		return Jwts.builder().setSubject(authentication.getName()).setIssuedAt(new Date()).setExpiration(expiryDate)
-//				.signWith(SignatureAlgorithm.HS512, secret).compact();
-//	}
 	public String generateToken(Authentication authentication, Long userId) {
 	    Date now = new Date();
 	    Date expiryDate = new Date(now.getTime() + expiration);

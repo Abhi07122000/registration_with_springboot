@@ -38,11 +38,11 @@ public class UsersServiceImpl {
 	@Autowired
 	private AuthenticationManager authenticationManager;
 
-	public void signUp(SignupDto signupDto) {
+	public User signUp(SignupDto signupDto) {
 		User user = modelMapper.map(signupDto, User.class);
 		user.setPassword(passwordEncoder.encode(signupDto.getPassword()));
 		user.setActive(true);
-		userRepository.save(user);
+		return userRepository.save(user);
 	}
 
 	public ResponseEnvelope validateUserAndLogin(LoginDto loginDto) {
@@ -54,14 +54,14 @@ public class UsersServiceImpl {
 			User cur = user.get();
 			boolean flag = passwordEncoder.matches(loginDto.getPassword(), cur.getPassword());
 			if(!flag) {
-				return new ResponseEnvelope(HttpStatus.OK.value(), HttpStatus.ACCEPTED.getReasonPhrase(),
+				return new ResponseEnvelope(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),
 						"Invalid Password");
 			}
 			Authentication authentication = authenticationManager
 					.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			String token = jwtUtils.generateToken(authentication, cur.getId());
-			return new ResponseEnvelope(HttpStatus.OK.value(), HttpStatus.ACCEPTED.getReasonPhrase(),
+			return new ResponseEnvelope(HttpStatus.OK.value(), "Login Successful",
 					token);
 		}
 	}
@@ -87,7 +87,7 @@ public class UsersServiceImpl {
 				user.setPassword(passwordEncoder.encode(updateUserDto.getPassword()));
 			}
 			userRepository.save(user);
-			return new ResponseEnvelope(HttpStatus.OK.value(), HttpStatus.ACCEPTED.getReasonPhrase(),
+			return new ResponseEnvelope(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
 					"User data updated successfully");
 		} else {
 			return new ResponseEnvelope(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),

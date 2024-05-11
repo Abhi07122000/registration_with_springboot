@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.CashrichLogin.api.v1.controller.request.LoginDto;
 import com.example.CashrichLogin.api.v1.controller.request.SignupDto;
 import com.example.CashrichLogin.api.v1.controller.request.UpdationDto;
+import com.example.CashrichLogin.domain.User;
 import com.example.CashrichLogin.service.UsersServiceImpl;
 
 import jakarta.validation.Valid;
@@ -25,8 +26,12 @@ public class UserController {
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> signUp(@RequestBody @Valid SignupDto signupDto) {
-		userServiceImpl.signUp(signupDto);
-		return ResponseEntity.ok("User signed up successfully");
+		User user = userServiceImpl.signUp(signupDto);
+	    if (user != null) {
+	        return ResponseEntity.ok("User signed up successfully");
+	    } else {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to sign up user");
+	    }
 	}
 
 	@PostMapping("/login")
