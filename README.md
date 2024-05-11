@@ -1,4 +1,4 @@
-User Registration and Authentication API
+#User Registration and Authentication API
 This API provides functionality for user registration, authentication, and profile management. It also includes integration with a third-party API.
 
 Features
