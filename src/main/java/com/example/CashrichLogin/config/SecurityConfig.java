@@ -8,11 +8,14 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.example.CashrichLogin.security.UserDetailsServiceImplementation;
+import com.example.CashrichLogin.security.JwtAuthenticationFilter;
+import com.example.CashrichLogin.security.service.UserDetailsServiceImplementation;
 
 @Configuration
 @EnableWebSecurity
@@ -20,6 +23,9 @@ public class SecurityConfig {
 
 	@Autowired
 	UserDetailsServiceImplementation userDetailsServiceImpl;
+
+	@Autowired
+	private JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
 	AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration)
@@ -43,12 +49,13 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf().disable().authorizeRequests().requestMatchers("/api/v1/users/signup").permitAll()
-				.requestMatchers("/api/v1/users/login").permitAll()
-				.requestMatchers("/api/v1/users/update").permitAll()
-				.requestMatchers("/crypto-data/by-user").permitAll()
-				.anyRequest().authenticated();
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/users/*")
+						.permitAll().requestMatchers("/crypto-data/by-user").permitAll().anyRequest().authenticated())
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
 		return http.build();
 	}
 

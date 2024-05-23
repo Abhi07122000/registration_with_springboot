@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import com.example.CashrichLogin.api.v1.controller.request.LoginDto;
 import com.example.CashrichLogin.api.v1.controller.request.SignupDto;
 import com.example.CashrichLogin.api.v1.controller.request.UpdationDto;
+import com.example.CashrichLogin.api.v1.controller.response.LoginResponse;
 import com.example.CashrichLogin.api.v1.controller.response.ResponseEnvelope;
 import com.example.CashrichLogin.domain.User;
 import com.example.CashrichLogin.repository.UserRepository;
@@ -29,25 +30,29 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
 @Service
-public class UsersServiceImpl {
+public class UsersServiceImpl implements UserService {
 
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
+	
+	private final ModelMapper modelMapper;
+	
+	private final PasswordEncoder passwordEncoder;
+	
+	private final JwtUtils jwtUtils;
+	
+	private final AuthenticationManager authenticationManager;
+	
+	private final Validator validator;
 
-	@Autowired
-	private ModelMapper modelMapper;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
-
-	@Autowired
-	private JwtUtils jwtUtils;
-
-	@Autowired
-	private AuthenticationManager authenticationManager;
-
-	@Autowired
-	private Validator validator;
+	public UsersServiceImpl(UserRepository userRepository, ModelMapper modelMapper, PasswordEncoder passwordEncoder,
+			JwtUtils jwtUtils, AuthenticationManager authenticationManager, Validator validator) {
+		this.userRepository = userRepository;
+		this.modelMapper = modelMapper;
+		this.passwordEncoder = passwordEncoder;
+		this.jwtUtils = jwtUtils;
+		this.authenticationManager = authenticationManager;
+		this.validator = validator;
+	}
 
 	public ResponseEnvelope signUp(SignupDto signupDto) {
 		User user = modelMapper.map(signupDto, User.class);
@@ -66,24 +71,20 @@ public class UsersServiceImpl {
 		}
 	}
 
-	public ResponseEnvelope validateUserAndLogin(LoginDto loginDto) {
-		Optional<User> user = userRepository.findByUsername(loginDto.getUsername());
-		if (!user.isPresent()) {
-			return new ResponseEnvelope(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),
-					"User Not Found");
-		} else {
-			User cur = user.get();
-			boolean flag = passwordEncoder.matches(loginDto.getPassword(), cur.getPassword());
-			if (!flag) {
-				return new ResponseEnvelope(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-						"Invalid Password");
-			}
-			Authentication authentication = authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-			String token = jwtUtils.generateToken(authentication, cur.getId());
-			return new ResponseEnvelope(HttpStatus.OK.value(), "Login Successful", token);
-		}
+	public Optional<User> validateUserName(LoginDto loginDto) {
+		return userRepository.findByUsername(loginDto.getUsername());
+	}
+
+	public boolean validatePassword(LoginDto loginDto, User user) {
+		return passwordEncoder.matches(loginDto.getPassword(), user.getPassword());
+	}
+
+	public LoginResponse validateUserAndLogin(LoginDto loginDto, User user) {
+		Authentication authentication = authenticationManager
+				.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		String token = jwtUtils.generateToken(authentication, user.getId());
+		return new LoginResponse(token, "Login Successful");
 	}
 
 	public boolean validateToken(String token) {
@@ -116,7 +117,7 @@ public class UsersServiceImpl {
 	}
 
 	public Map<String, Object> performValidation(SignupDto signupDto) {
-		Set<ConstraintViolation<SignupDto>> violations = validator.validate(signupDto, ValidationGroup.class);
+		Set<ConstraintViolation<SignupDto>> violations = validator.validate(signupDto, SignUpValidationGroup.class);
 		if (!violations.isEmpty()) {
 			Map<String, Object> errorMap = new HashMap<>();
 			for (ConstraintViolation<SignupDto> violation : violations) {

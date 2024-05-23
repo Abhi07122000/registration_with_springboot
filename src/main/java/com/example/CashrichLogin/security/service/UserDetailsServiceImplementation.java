@@ -1,4 +1,4 @@
-package com.example.CashrichLogin.security;
+package com.example.CashrichLogin.security.service;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

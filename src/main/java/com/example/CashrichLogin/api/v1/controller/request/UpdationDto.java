@@ -9,9 +9,6 @@ import lombok.Data;
 public class UpdationDto {
 
 	@NotBlank
-	private String token;
-	
-	@NotBlank
     @Size(max = 50)
     private String firstName;
 

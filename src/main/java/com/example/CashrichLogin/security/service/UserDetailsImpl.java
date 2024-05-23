@@ -1,4 +1,4 @@
-package com.example.CashrichLogin.security;
+package com.example.CashrichLogin.security.service;
 
 import java.util.Collection;
 import java.util.Collections;

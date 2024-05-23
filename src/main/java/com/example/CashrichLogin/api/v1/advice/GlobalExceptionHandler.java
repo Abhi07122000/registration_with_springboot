@@ -4,12 +4,16 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -27,6 +31,21 @@ public class GlobalExceptionHandler {
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	private static final int RANDOM_LOWER = 1000;
 	private static final int RANDOM_UPPER = 9000;
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ResponseEnvelope> handleValidationExceptions(HttpServletRequest request,
+			HttpServletResponse response, MethodArgumentNotValidException ex) {
+		Map<String, String> errors = new HashMap<>();
+		ex.getBindingResult().getAllErrors().forEach((error) -> {
+			String fieldName = ((FieldError) error).getField();
+			String errorMessage = error.getDefaultMessage();
+			errors.put(fieldName, errorMessage);
+		});
+		String errorId = getErrorId();
+		ResponseEnvelope exceptionReponse = new ResponseEnvelope(ex.getStatusCode().value(), errorId, errors);
+		response.setStatus(ex.getStatusCode().value());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionReponse);
+	}
 
 	@ExceptionHandler(BusinessException.class)
 	public ResponseEntity<ResponseEnvelope> handleBusinessExceptionExceptionError(HttpServletRequest request,
@@ -48,7 +67,7 @@ public class GlobalExceptionHandler {
 	}
 
 	public String getErrorId() {
-		return "CashRich" + formatter.format(LocalDateTime.now())
+		return "CashRich " + formatter.format(LocalDateTime.now())
 				+ (new SecureRandom().nextInt(RANDOM_UPPER) + RANDOM_LOWER);
 	}
 
