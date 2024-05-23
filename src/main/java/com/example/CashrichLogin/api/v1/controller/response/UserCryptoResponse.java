@@ -17,5 +17,7 @@ public class UserCryptoResponse {
 
 	private String maxSupply;
 
+	private String price;
+
 	private LocalDateTime createdDate;
 }

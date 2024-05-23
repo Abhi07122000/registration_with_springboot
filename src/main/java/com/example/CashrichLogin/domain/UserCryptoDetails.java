@@ -33,6 +33,8 @@ public class UserCryptoDetails {
     private String numMarketPairs;
 
     private String maxSupply;
+    
+    private String price;
 
     private LocalDateTime createdDate=LocalDateTime.now();	
 }

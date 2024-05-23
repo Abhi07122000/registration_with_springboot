@@ -63,6 +63,11 @@ public class UserController {
 		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
 				.body(new ResponseEnvelope(HttpStatus.OK.value(), loginResponse.getMessage(), null));
 	}
+	
+	/*
+	 * Add new Field customerPan
+	 * /
+	 */
 
 	@PutMapping("/update")
 	public ResponseEntity<?> updateUser(@RequestBody @Valid UpdationDto updationDto) {
