@@ -56,6 +56,10 @@ public class User {
     @Pattern(regexp="(^$|[0-9]{10})")
     private String mobileNo;
 
+    @NotBlank
+    @Pattern(regexp="[A-Z]{5}[0-9]{4}[A-Z]{1}")
+    private String panNumber;
+
     @CreationTimestamp
     private LocalDateTime createdDate;
     

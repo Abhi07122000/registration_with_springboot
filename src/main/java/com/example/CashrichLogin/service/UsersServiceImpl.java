@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,8 +21,10 @@ import com.example.CashrichLogin.api.v1.controller.request.SignupDto;
 import com.example.CashrichLogin.api.v1.controller.request.UpdationDto;
 import com.example.CashrichLogin.api.v1.controller.response.LoginResponse;
 import com.example.CashrichLogin.api.v1.controller.response.ResponseEnvelope;
+import com.example.CashrichLogin.api.v1.controller.response.UserProfileDetails;
 import com.example.CashrichLogin.domain.User;
 import com.example.CashrichLogin.repository.UserRepository;
+import com.example.CashrichLogin.security.EncryptionUtil;
 import com.example.CashrichLogin.security.JwtUtils;
 
 import jakarta.validation.ConstraintViolation;
@@ -43,21 +44,25 @@ public class UsersServiceImpl implements UserService {
 	private final AuthenticationManager authenticationManager;
 	
 	private final Validator validator;
+	
+    private EncryptionUtil encryptionUtil;
 
 	public UsersServiceImpl(UserRepository userRepository, ModelMapper modelMapper, PasswordEncoder passwordEncoder,
-			JwtUtils jwtUtils, AuthenticationManager authenticationManager, Validator validator) {
+			JwtUtils jwtUtils, AuthenticationManager authenticationManager, Validator validator, EncryptionUtil encryptionUtil) {
 		this.userRepository = userRepository;
 		this.modelMapper = modelMapper;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtUtils = jwtUtils;
 		this.authenticationManager = authenticationManager;
 		this.validator = validator;
+		this.encryptionUtil = encryptionUtil;
 	}
 
-	public ResponseEnvelope signUp(SignupDto signupDto) {
+	public ResponseEnvelope signUp(SignupDto signupDto) throws Exception {
 		User user = modelMapper.map(signupDto, User.class);
 		user.setPassword(passwordEncoder.encode(signupDto.getPassword()));
 		user.setActive(true);
+        user.setPanNumber(encryptionUtil.encrypt(signupDto.getPanNumber()));
 		try {
 			userRepository.save(user);
 			return new ResponseEnvelope(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
@@ -126,5 +131,21 @@ public class UsersServiceImpl implements UserService {
 			return errorMap;
 		}
 		return Collections.emptyMap();
+	}
+
+	@Override
+	public UserProfileDetails getUserProfile(String token) throws Exception {
+		UserProfileDetails response = new UserProfileDetails();
+		Optional<User> optionalUser = userRepository.findById(jwtUtils.extractUserId(token));
+		if(optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			response.setFirstName(user.getFirstName());
+			response.setLastName(user.getLastName());
+			response.setMobileNo(user.getMobileNo());
+			response.setEmail(user.getEmail());
+			response.setPanNumber(encryptionUtil.decrypt(user.getPanNumber()));
+			return response;
+		}
+		return null;
 	}
 }

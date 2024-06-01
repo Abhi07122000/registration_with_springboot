@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,7 +35,7 @@ public class UserController {
 	private UserService userServiceImpl;
 
 	@PostMapping("/signup")
-	public ResponseEntity<?> signUp(@RequestBody SignupDto signupDto) {
+	public ResponseEntity<?> signUp(@RequestBody SignupDto signupDto) throws Exception {
 		Map<String, Object> violations = userServiceImpl.performValidation(signupDto);
 		if (violations.isEmpty()) {
 			ResponseEnvelope response = userServiceImpl.signUp(signupDto);
@@ -64,13 +66,13 @@ public class UserController {
 				.body(new ResponseEnvelope(HttpStatus.OK.value(), loginResponse.getMessage(), null));
 	}
 	
-	/*
-	 * Add new Field customerPan
-	 * /
-	 */
-
 	@PutMapping("/update")
 	public ResponseEntity<?> updateUser(@RequestBody @Valid UpdationDto updationDto) {
 		return ResponseEntity.ok(userServiceImpl.updateUser(updationDto));
+	}
+	
+	@GetMapping("/user-details")
+	public ResponseEntity<Object> userProfile(@RequestHeader Map<String, String> headers) throws Exception {
+		return ResponseEntity.ok(userServiceImpl.getUserProfile(headers.get("authorization")));
 	}
 }

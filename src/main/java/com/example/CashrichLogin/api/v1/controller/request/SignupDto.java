@@ -36,4 +36,8 @@ public class SignupDto {
 	@Pattern(regexp="^[0-9]*$", message = "Mobile number must contain only digits", groups = SignUpValidationGroup.class)
 	private String mobileNo;
     
+	@NotBlank(groups = SignUpValidationGroup.class, message = "PAN Number is required")
+    @Pattern(regexp="[A-Z]{5}[0-9]{4}[A-Z]{1}", groups = SignUpValidationGroup.class)
+    private String panNumber;
+	
 }
