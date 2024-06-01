@@ -17,8 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.CashrichLogin.api.v1.controller.request.LoginDto;
-import com.example.CashrichLogin.api.v1.controller.request.SignupDto;
-import com.example.CashrichLogin.api.v1.controller.request.UpdationDto;
+import com.example.CashrichLogin.api.v1.controller.request.UserRequest;
 import com.example.CashrichLogin.api.v1.controller.response.LoginResponse;
 import com.example.CashrichLogin.api.v1.controller.response.ResponseEnvelope;
 import com.example.CashrichLogin.api.v1.controller.response.UserProfileDetails;
@@ -58,7 +57,7 @@ public class UsersServiceImpl implements UserService {
 		this.encryptionUtil = encryptionUtil;
 	}
 
-	public ResponseEnvelope signUp(SignupDto signupDto) throws Exception {
+	public ResponseEnvelope signUp(UserRequest signupDto) throws Exception {
 		User user = modelMapper.map(signupDto, User.class);
 		user.setPassword(passwordEncoder.encode(signupDto.getPassword()));
 		user.setActive(true);
@@ -96,7 +95,7 @@ public class UsersServiceImpl implements UserService {
 		return jwtUtils.validateToken(token);
 	}
 
-	public ResponseEnvelope updateUser(UpdationDto updateUserDto) {
+	public ResponseEnvelope updateUser(UserRequest updateUserDto) {
 		Optional<User> userOptional = userRepository.findByUsername(updateUserDto.getUsername());
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
@@ -121,11 +120,24 @@ public class UsersServiceImpl implements UserService {
 		}
 	}
 
-	public Map<String, Object> performValidation(SignupDto signupDto) {
-		Set<ConstraintViolation<SignupDto>> violations = validator.validate(signupDto, SignUpValidationGroup.class);
+	public Map<String, Object> performSignUpValidation(UserRequest signupDto) {
+		Set<ConstraintViolation<UserRequest>> violations = validator.validate(signupDto, SignUpValidationGroup.class);
 		if (!violations.isEmpty()) {
 			Map<String, Object> errorMap = new HashMap<>();
-			for (ConstraintViolation<SignupDto> violation : violations) {
+			for (ConstraintViolation<UserRequest> violation : violations) {
+				errorMap.put(violation.getPropertyPath().toString(), violation.getMessage());
+			}
+			return errorMap;
+		}
+		return Collections.emptyMap();
+	}
+
+	@Override
+	public Map<String, Object> performUpdationValidation(UserRequest signupDto) {
+		Set<ConstraintViolation<UserRequest>> violations = validator.validate(signupDto, UpdationValidationGroup.class);
+		if (!violations.isEmpty()) {
+			Map<String, Object> errorMap = new HashMap<>();
+			for (ConstraintViolation<UserRequest> violation : violations) {
 				errorMap.put(violation.getPropertyPath().toString(), violation.getMessage());
 			}
 			return errorMap;
@@ -148,4 +160,5 @@ public class UsersServiceImpl implements UserService {
 		}
 		return null;
 	}
+
 }

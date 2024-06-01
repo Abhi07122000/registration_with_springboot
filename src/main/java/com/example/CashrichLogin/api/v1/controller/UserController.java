@@ -16,8 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.CashrichLogin.api.v1.controller.request.LoginDto;
-import com.example.CashrichLogin.api.v1.controller.request.SignupDto;
-import com.example.CashrichLogin.api.v1.controller.request.UpdationDto;
+import com.example.CashrichLogin.api.v1.controller.request.UserRequest;
 import com.example.CashrichLogin.api.v1.controller.response.LoginResponse;
 import com.example.CashrichLogin.api.v1.controller.response.ResponseEnvelope;
 import com.example.CashrichLogin.domain.User;
@@ -35,8 +34,8 @@ public class UserController {
 	private UserService userServiceImpl;
 
 	@PostMapping("/signup")
-	public ResponseEntity<?> signUp(@RequestBody SignupDto signupDto) throws Exception {
-		Map<String, Object> violations = userServiceImpl.performValidation(signupDto);
+	public ResponseEntity<?> signUp(@RequestBody UserRequest signupDto) throws Exception {
+		Map<String, Object> violations = userServiceImpl.performSignUpValidation(signupDto);
 		if (violations.isEmpty()) {
 			ResponseEnvelope response = userServiceImpl.signUp(signupDto);
 			return ResponseEntity.ok(response);
@@ -65,12 +64,18 @@ public class UserController {
 		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
 				.body(new ResponseEnvelope(HttpStatus.OK.value(), loginResponse.getMessage(), null));
 	}
-	
+
 	@PutMapping("/update")
-	public ResponseEntity<?> updateUser(@RequestBody @Valid UpdationDto updationDto) {
-		return ResponseEntity.ok(userServiceImpl.updateUser(updationDto));
+	public ResponseEntity<?> updateUser(@RequestBody UserRequest updationDto) {
+		Map<String, Object> violations = userServiceImpl.performUpdationValidation(updationDto);
+		if (violations.isEmpty()) {
+			return ResponseEntity.ok(userServiceImpl.updateUser(updationDto));
+		} else {
+			return ResponseEntity.ok(new ResponseEnvelope(HttpStatus.BAD_REQUEST.value(),
+					HttpStatus.BAD_REQUEST.getReasonPhrase(), violations));
+		}
 	}
-	
+
 	@GetMapping("/user-details")
 	public ResponseEntity<Object> userProfile(@RequestHeader Map<String, String> headers) throws Exception {
 		return ResponseEntity.ok(userServiceImpl.getUserProfile(headers.get("authorization")));
